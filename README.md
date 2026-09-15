@@ -2,6 +2,8 @@
 
 Frontend Angular 20 de **Pedidos360** con autenticación **Microsoft Entra ID** mediante **MSAL Angular**.
 
+**Demo:** https://germanelgris.github.io/frontend-pedidos360/ (el backend en AWS responde mientras el laboratorio de AWS Academy está encendido)
+
 ## Qué implementa
 
 | Requisito | Dónde |
@@ -37,7 +39,10 @@ Editar `src/environments/environment.ts`:
 | `apiClientId` | App `Pedidos360-API` → Id. de aplicación (cliente) |
 | `apiBaseUrl` | URL de invocación del API Gateway (`https://<id>.execute-api.us-east-1.amazonaws.com`) o `http://localhost:18080` (BFF local) |
 
-En Entra ID, la app SPA debe tener como URI de redirección (plataforma **SPA**) `http://localhost:4200/auth/callback`.
+La `redirectUri` se calcula desde la URL donde corre la app. En Entra ID, la app SPA debe tener registradas (plataforma **SPA**):
+
+- `http://localhost:4200/auth/callback`
+- `https://germanelgris.github.io/frontend-pedidos360/auth/callback`
 
 ## Ejecutar
 
@@ -46,6 +51,10 @@ npm install
 npm start          # http://localhost:4200
 npm run build
 ```
+
+## Despliegue
+
+El workflow `.github/workflows/deploy-pages.yml` compila con `--base-href /frontend-pedidos360/` y publica en la rama `gh-pages` en cada push a `main`. GitHub Pages sirve esa rama.
 
 ## Autores
 

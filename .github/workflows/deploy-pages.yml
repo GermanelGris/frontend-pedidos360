@@ -1,0 +1,36 @@
+# Compila el frontend y lo publica en GitHub Pages (rama gh-pages) en cada push a main.
+# URL: https://germanelgris.github.io/frontend-pedidos360/
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - run: npm ci
+
+      - name: Build
+        run: npx ng build --base-href /frontend-pedidos360/
+
+      # GitHub Pages no conoce las rutas de Angular: 404.html = index.html para que /auth/callback y demás rutas carguen la app
+      - name: SPA fallback
+        run: cp dist/frontend-pedidos360/browser/index.html dist/frontend-pedidos360/browser/404.html
+
+      - uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: dist/frontend-pedidos360/browser
