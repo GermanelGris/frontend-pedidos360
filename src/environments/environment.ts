@@ -17,5 +17,5 @@ export const environment = {
     apiScopes: [`api://${apiClientId}/Pedidos.ReadWrite`],
   },
   // AWS API Gateway (HTTP API con autorizador JWT) → BFF en EC2. Para probar local: 'http://localhost:18080'
-  apiBaseUrl: 'https://z5ter2hxya.execute-api.us-east-1.amazonaws.com',
+  apiBaseUrl: 'https://2939y8xwua.execute-api.us-east-1.amazonaws.com',
 };
