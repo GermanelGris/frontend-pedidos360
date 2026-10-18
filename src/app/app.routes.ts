@@ -10,6 +10,7 @@ import { CatalogComponent } from './pages/catalog/catalog.component';
 import { DashboardComponent } from './pages/dashboard/dashboard.component';
 import { ForbiddenComponent } from './pages/forbidden/forbidden.component';
 import { LoginComponent } from './pages/login/login.component';
+import { MessagingComponent } from './pages/messaging/messaging.component';
 import { OrderDetailComponent } from './pages/orders/order-detail.component';
 import { OrdersComponent } from './pages/orders/orders.component';
 import { ReportsComponent } from './pages/reports/reports.component';
@@ -37,6 +38,7 @@ export const routes: Routes = [
       { path: 'catalog', component: CatalogComponent, canActivate: [roleGuard], data: { roles: ['Admin', 'Operador'] } },
       { path: 'reports', component: ReportsComponent, canActivate: [roleGuard], data: { roles: ['Admin'] } },
       { path: 'audit', component: AuditComponent, canActivate: [roleGuard], data: { roles: ['Admin'] } },
+      { path: 'messaging', component: MessagingComponent, canActivate: [roleGuard], data: { roles: ['Admin'] } },
     ],
   },
 

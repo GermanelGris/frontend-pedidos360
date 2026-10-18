@@ -63,7 +63,8 @@ export function errorMessage(error: unknown): string {
     }
     const body = error.error;
     const detail = body?.message ?? (typeof body === 'string' ? body : error.message);
-    return `${error.status} - ${detail}`;
+    const details = Array.isArray(body?.details) ? `: ${body.details.join('; ')}` : '';
+    return `${error.status} - ${detail}${details}`;
   }
   return 'Error inesperado';
 }

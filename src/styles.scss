@@ -2035,6 +2035,20 @@ input[type='number'] {
   font-weight: 500;
 }
 
+button.filter-pill {
+  cursor: pointer;
+
+  &:hover {
+    color: var(--text);
+  }
+
+  &.active {
+    border-color: var(--primary);
+    color: var(--primary);
+    background: var(--surface);
+  }
+}
+
 .timeline {
   list-style: none;
   margin: 8px 0 0;

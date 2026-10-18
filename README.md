@@ -27,6 +27,7 @@ Frontend Angular 20 de **Pedidos360** con autenticación **Microsoft Entra ID** 
 | `/catalog` | CatalogComponent, ProductCardComponent, ProductFormComponent | Admin, Operador |
 | `/reports` | ReportsComponent (próxima etapa) | Admin |
 | `/audit` | AuditComponent (próxima etapa) | Admin |
+| `/messaging` | MessagingComponent con pestañas Colas, Exchanges, Bindings y Mensaje de prueba (`MqAdminService` → BFF `/api/mq/**`) | Admin |
 
 ## Configuración
 

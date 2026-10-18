@@ -15,6 +15,7 @@ const MENU: MenuItem[] = [
   { path: '/catalog', label: 'Catálogo', roles: ['Admin', 'Operador'] },
   { path: '/reports', label: 'Reportería', roles: ['Admin'] },
   { path: '/audit', label: 'Auditoría', roles: ['Admin'] },
+  { path: '/messaging', label: 'Mensajería', roles: ['Admin'] },
 ];
 
 @Component({
@@ -46,6 +47,9 @@ const MENU: MenuItem[] = [
                 }
                 @case ('/catalog') {
                   <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2" /><path d="M7 2v20" /><path d="M21 15V2a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3Zm0 0v7" /></svg>
+                }
+                @case ('/messaging') {
+                  <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M22 12h-6l-2 3h-4l-2-3H2" /><path d="M5.45 5.11 2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z" /></svg>
                 }
                 @case ('/reports') {
                   <svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 3v18h18" /><path d="M18 17V9M13 17V5M8 17v-3" /></svg>
