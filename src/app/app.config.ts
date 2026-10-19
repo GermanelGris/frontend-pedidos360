@@ -5,7 +5,7 @@ import {
   provideBrowserGlobalErrorListeners,
   provideZoneChangeDetection,
 } from '@angular/core';
-import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
+import { HTTP_INTERCEPTORS, provideHttpClient, withInterceptors, withInterceptorsFromDi } from '@angular/common/http';
 import { provideRouter } from '@angular/router';
 import {
   MSAL_GUARD_CONFIG,
@@ -20,13 +20,15 @@ import { firstValueFrom } from 'rxjs';
 
 import { routes } from './app.routes';
 import { msalGuardConfigFactory, msalInstanceFactory, msalInterceptorConfigFactory } from './auth/msal-config';
+import { liveRefreshInterceptor } from './core/live-refresh.service';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideZoneChangeDetection({ eventCoalescing: true }),
     provideRouter(routes),
-    provideHttpClient(withInterceptorsFromDi()),
+    // liveRefreshInterceptor: tras cada cambio exitoso, las listas abiertas se refrescan al instante
+    provideHttpClient(withInterceptors([liveRefreshInterceptor]), withInterceptorsFromDi()),
 
     // MSAL
     { provide: MSAL_INSTANCE, useFactory: msalInstanceFactory },

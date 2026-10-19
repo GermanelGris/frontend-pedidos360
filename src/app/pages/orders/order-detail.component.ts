@@ -1,9 +1,10 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
 import { AuthService } from '../../auth/auth.service';
+import { LiveRefreshService } from '../../core/live-refresh.service';
 import { errorMessage, Order, ORDER_STATUSES, OrderStatus } from '../../core/models';
 import { OrdersService } from '../../core/orders.service';
 import { OrderStatusBadgeComponent } from './order-status-badge.component';
@@ -147,6 +148,8 @@ export class OrderDetailComponent implements OnInit {
   readonly auth = inject(AuthService);
   private readonly route = inject(ActivatedRoute);
   private readonly ordersApi = inject(OrdersService);
+  private readonly live = inject(LiveRefreshService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly statuses = ORDER_STATUSES;
   readonly order = signal<Order | null>(null);
@@ -156,7 +159,8 @@ export class OrderDetailComponent implements OnInit {
   async ngOnInit(): Promise<void> {
     await this.auth.loadClaims();
     const id = Number(this.route.snapshot.paramMap.get('id'));
-    this.ordersApi.get(id).subscribe({
+    // Si otro operador cambia el estado, este detalle lo refleja en a lo más 5 s
+    this.live.watch(this.destroyRef, () => this.ordersApi.get(id), {
       next: (order) => this.order.set(order),
       error: (err) => this.error.set(errorMessage(err)),
     });

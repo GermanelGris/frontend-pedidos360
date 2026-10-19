@@ -1,8 +1,9 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
 import { AuthService } from '../../auth/auth.service';
+import { LiveRefreshService } from '../../core/live-refresh.service';
 import { errorMessage, Order } from '../../core/models';
 import { OrdersService } from '../../core/orders.service';
 import { OrderStatusBadgeComponent } from '../orders/order-status-badge.component';
@@ -194,6 +195,8 @@ const CLOSED = ['ENTREGADO', 'CANCELADO'];
 export class DashboardComponent implements OnInit {
   readonly auth = inject(AuthService);
   private readonly ordersApi = inject(OrdersService);
+  private readonly live = inject(LiveRefreshService);
+  private readonly destroyRef = inject(DestroyRef);
 
   /** Fecha de hoy en español (solo presentación). */
   readonly today = new Date().toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
@@ -218,7 +221,7 @@ export class DashboardComponent implements OnInit {
 
   async ngOnInit(): Promise<void> {
     await this.auth.loadClaims();
-    this.ordersApi.list().subscribe({
+    this.live.watch(this.destroyRef, () => this.ordersApi.list(), {
       next: (orders) => this.orders.set(orders),
       error: (err) => this.error.set(errorMessage(err)),
     });

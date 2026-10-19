@@ -1,9 +1,10 @@
 import { CurrencyPipe } from '@angular/common';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 
 import { AuthService } from '../../auth/auth.service';
 import { CatalogService } from '../../core/catalog.service';
+import { LiveRefreshService } from '../../core/live-refresh.service';
 import { errorMessage, Order, Product } from '../../core/models';
 import { OrdersService } from '../../core/orders.service';
 import { OrderListComponent } from './order-list.component';
@@ -142,6 +143,8 @@ export class OrdersComponent implements OnInit {
   readonly auth = inject(AuthService);
   private readonly ordersApi = inject(OrdersService);
   private readonly catalogApi = inject(CatalogService);
+  private readonly live = inject(LiveRefreshService);
+  private readonly destroyRef = inject(DestroyRef);
 
   readonly orders = signal<Order[]>([]);
   readonly products = signal<Product[]>([]);
@@ -159,7 +162,11 @@ export class OrdersComponent implements OnInit {
 
   async ngOnInit(): Promise<void> {
     await this.auth.loadClaims();
-    this.loadOrders();
+    // Polling cada 5 s + refresco inmediato tras crear un pedido o cambiar un estado (LiveRefreshService)
+    this.live.watch(this.destroyRef, () => this.ordersApi.list(), {
+      next: (orders) => this.orders.set(orders),
+      error: (err) => this.error.set(errorMessage(err)),
+    });
     if (this.auth.hasAnyRole('Cliente', 'Operador')) {
       this.catalogApi.list().subscribe({
         next: (products) => this.products.set(products),
@@ -202,19 +209,11 @@ export class OrdersComponent implements OnInit {
           this.lines.set([]);
           this.customerName.set('');
           this.saving.set(false);
-          this.loadOrders();
         },
         error: (err) => {
           this.error.set(errorMessage(err));
           this.saving.set(false);
         },
       });
-  }
-
-  private loadOrders(): void {
-    this.ordersApi.list().subscribe({
-      next: (orders) => this.orders.set(orders),
-      error: (err) => this.error.set(errorMessage(err)),
-    });
   }
 }

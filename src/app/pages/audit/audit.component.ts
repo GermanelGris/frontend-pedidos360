@@ -1,9 +1,11 @@
 import { DatePipe } from '@angular/common';
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { Subject } from 'rxjs';
 
 import { AUDIT_EVENT_TYPES, AuditEvent, AuditFilters, AuditService } from '../../core/audit.service';
+import { LiveRefreshService } from '../../core/live-refresh.service';
 import { errorMessage } from '../../core/models';
 
 /** Timeline de ms-pedidos360-audit: cada evento de pedido llega por RabbitMQ (orders.events) y queda registrado. */
@@ -98,6 +100,9 @@ import { errorMessage } from '../../core/models';
 })
 export class AuditComponent implements OnInit {
   private readonly api = inject(AuditService);
+  private readonly live = inject(LiveRefreshService);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly reload = new Subject<void>();
 
   readonly types = AUDIT_EVENT_TYPES;
   readonly limit = 100;
@@ -108,22 +113,29 @@ export class AuditComponent implements OnInit {
   readonly error = signal('');
 
   ngOnInit(): void {
-    this.search();
+    this.loading.set(true);
+    // Polling cada 5 s con los filtros vigentes; también al pulsar Buscar y tras cada cambio propio
+    this.live.watch(
+      this.destroyRef,
+      () => this.api.events(this.filters, this.limit),
+      {
+        next: (events) => {
+          this.events.set(events);
+          this.error.set('');
+          this.loading.set(false);
+        },
+        error: (err) => {
+          this.error.set(errorMessage(err));
+          this.loading.set(false);
+        },
+      },
+      this.reload,
+    );
   }
 
   search(): void {
     this.loading.set(true);
-    this.error.set('');
-    this.api.events(this.filters, this.limit).subscribe({
-      next: (events) => {
-        this.events.set(events);
-        this.loading.set(false);
-      },
-      error: (err) => {
-        this.error.set(errorMessage(err));
-        this.loading.set(false);
-      },
-    });
+    this.reload.next();
   }
 
   clear(): void {

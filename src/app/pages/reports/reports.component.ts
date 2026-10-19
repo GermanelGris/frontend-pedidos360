@@ -1,7 +1,8 @@
 import { CurrencyPipe, DatePipe } from '@angular/common';
-import { Component, computed, inject, OnInit, signal } from '@angular/core';
-import { forkJoin } from 'rxjs';
+import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
+import { forkJoin, Subject } from 'rxjs';
 
+import { LiveRefreshService } from '../../core/live-refresh.service';
 import { errorMessage } from '../../core/models';
 import { HourlySales, KpiResponse, ReportService, TopProduct } from '../../core/report.service';
 
@@ -178,6 +179,9 @@ const STATUS_LABELS: Record<string, string> = {
 })
 export class ReportsComponent implements OnInit {
   private readonly api = inject(ReportService);
+  private readonly live = inject(LiveRefreshService);
+  private readonly destroyRef = inject(DestroyRef);
+  private readonly reload = new Subject<void>();
 
   readonly hours = signal(24);
   readonly kpis = signal<KpiResponse | null>(null);
@@ -195,7 +199,25 @@ export class ReportsComponent implements OnInit {
   );
 
   ngOnInit(): void {
-    this.load();
+    // Polling cada 5 s; también al cambiar el rango, al pulsar Actualizar y tras cada cambio propio
+    this.live.watch(
+      this.destroyRef,
+      () => forkJoin({ kpis: this.api.kpis(), sales: this.api.salesByHour(this.hours()), top: this.api.topProducts(5) }),
+      {
+        next: ({ kpis, sales, top }) => {
+          this.kpis.set(kpis);
+          this.sales.set(sales);
+          this.top.set(top);
+          this.error.set('');
+          this.loading.set(false);
+        },
+        error: (err) => {
+          this.error.set(errorMessage(err));
+          this.loading.set(false);
+        },
+      },
+      this.reload,
+    );
   }
 
   changeHours(value: string): void {
@@ -205,23 +227,7 @@ export class ReportsComponent implements OnInit {
 
   load(): void {
     this.loading.set(true);
-    this.error.set('');
-    forkJoin({
-      kpis: this.api.kpis(),
-      sales: this.api.salesByHour(this.hours()),
-      top: this.api.topProducts(5),
-    }).subscribe({
-      next: ({ kpis, sales, top }) => {
-        this.kpis.set(kpis);
-        this.sales.set(sales);
-        this.top.set(top);
-        this.loading.set(false);
-      },
-      error: (err) => {
-        this.error.set(errorMessage(err));
-        this.loading.set(false);
-      },
-    });
+    this.reload.next();
   }
 
   barHeight(bar: HourlySales): number {
