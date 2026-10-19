@@ -2,9 +2,12 @@ import { CurrencyPipe, DatePipe } from '@angular/common';
 import { Component, computed, DestroyRef, inject, OnInit, signal } from '@angular/core';
 import { forkJoin, Subject } from 'rxjs';
 
+import { CatalogService } from '../../core/catalog.service';
 import { LiveRefreshService } from '../../core/live-refresh.service';
-import { errorMessage } from '../../core/models';
-import { HourlySales, KpiResponse, ReportService, TopProduct } from '../../core/report.service';
+import { errorMessage, Product } from '../../core/models';
+import { HourlySales, KpiResponse, ReportService, SalesGoal, TopProduct } from '../../core/report.service';
+import { SalesGoalsComponent } from './sales-goals.component';
+import { StockMeterComponent } from './stock-meter.component';
 
 const STATUS_LABELS: Record<string, string> = {
   CREADO: 'Creado',
@@ -18,7 +21,7 @@ const STATUS_LABELS: Record<string, string> = {
 /** KPIs de ms-pedidos360-report: se alimentan de forma asíncrona con los eventos de RabbitMQ (orders.events). */
 @Component({
   selector: 'app-reports',
-  imports: [CurrencyPipe, DatePipe],
+  imports: [CurrencyPipe, DatePipe, StockMeterComponent, SalesGoalsComponent],
   template: `
     <header class="page-header">
       <div>
@@ -164,9 +167,15 @@ const STATUS_LABELS: Record<string, string> = {
         </ul>
       </article>
     </section>
+
+    <section class="kpi-grid">
+      <app-sales-goals [goals]="goals()" />
+      <app-stock-meter [products]="products()" />
+    </section>
   `,
   styles: `
     .report-grid { grid-template-columns: repeat(auto-fill, minmax(min(320px, 100%), 1fr)); margin-top: 20px; }
+    .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(440px, 100%), 1fr)); gap: 20px; margin-top: 20px; align-items: start; }
     .report-grid .card { margin: 0; display: flex; flex-direction: column; gap: 14px; }
     .sales-chart { height: 140px; gap: 3px; }
     .sales-chart span { min-height: 2px; }
@@ -179,6 +188,7 @@ const STATUS_LABELS: Record<string, string> = {
 })
 export class ReportsComponent implements OnInit {
   private readonly api = inject(ReportService);
+  private readonly catalogApi = inject(CatalogService);
   private readonly live = inject(LiveRefreshService);
   private readonly destroyRef = inject(DestroyRef);
   private readonly reload = new Subject<void>();
@@ -187,6 +197,8 @@ export class ReportsComponent implements OnInit {
   readonly kpis = signal<KpiResponse | null>(null);
   readonly sales = signal<HourlySales[]>([]);
   readonly top = signal<TopProduct[]>([]);
+  readonly goals = signal<SalesGoal[]>([]);
+  readonly products = signal<Product[]>([]);
   readonly loading = signal(false);
   readonly error = signal('');
 
@@ -202,12 +214,21 @@ export class ReportsComponent implements OnInit {
     // Polling cada 5 s; también al cambiar el rango, al pulsar Actualizar y tras cada cambio propio
     this.live.watch(
       this.destroyRef,
-      () => forkJoin({ kpis: this.api.kpis(), sales: this.api.salesByHour(this.hours()), top: this.api.topProducts(5) }),
+      () =>
+        forkJoin({
+          kpis: this.api.kpis(),
+          sales: this.api.salesByHour(this.hours()),
+          top: this.api.topProducts(5),
+          goals: this.api.goals(),
+          products: this.catalogApi.list(),
+        }),
       {
-        next: ({ kpis, sales, top }) => {
+        next: ({ kpis, sales, top, goals, products }) => {
           this.kpis.set(kpis);
           this.sales.set(sales);
           this.top.set(top);
+          this.goals.set(goals);
+          this.products.set(products);
           this.error.set('');
           this.loading.set(false);
         },

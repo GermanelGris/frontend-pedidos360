@@ -26,6 +26,26 @@ export interface TopProduct {
   revenue: number;
 }
 
+/** Meta de venta con su avance: achieved = ventas del rango sin cancelados; progressPercent puede superar 100. */
+export interface SalesGoal {
+  id: number;
+  name: string;
+  amount: number;
+  startDate: string;
+  endDate: string;
+  achieved: number;
+  progressPercent: number;
+  createdBy: string | null;
+  createdAt: string;
+}
+
+export interface CreateGoalRequest {
+  name: string;
+  amount: number;
+  startDate: string;
+  endDate: string;
+}
+
 @Injectable({ providedIn: 'root' })
 export class ReportService {
   private readonly http = inject(HttpClient);
@@ -41,5 +61,17 @@ export class ReportService {
 
   topProducts(limit: number) {
     return this.http.get<TopProduct[]>(`${this.baseUrl}/top-products`, { params: new HttpParams().set('limit', limit) });
+  }
+
+  goals() {
+    return this.http.get<SalesGoal[]>(`${this.baseUrl}/goals`);
+  }
+
+  createGoal(request: CreateGoalRequest) {
+    return this.http.post<SalesGoal>(`${this.baseUrl}/goals`, request);
+  }
+
+  deleteGoal(id: number) {
+    return this.http.delete<void>(`${this.baseUrl}/goals/${id}`);
   }
 }
