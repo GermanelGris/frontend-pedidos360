@@ -14,7 +14,8 @@ Frontend Angular 20 de **Pedidos360** con autenticación **Microsoft Entra ID** 
 | Autorización por rol (`Admin`, `Operador`, `Cliente`) | `auth/role.guard.ts` + menú en `layout/layout.component.ts` |
 | Roles y scopes leídos desde los claims del access token | `AuthService.loadClaims()` |
 | `MsalInterceptor` adjunta `Authorization: Bearer <token>` | `protectedResourceMap` en `msal-config.ts` |
-| Consumo del API Gateway | `core/orders.service.ts`, `core/catalog.service.ts` |
+| Consumo del API Gateway | `core/orders.service.ts`, `core/catalog.service.ts`, `core/report.service.ts`, `core/audit.service.ts`, `core/mq-admin.service.ts` |
+| Listas en vivo: consulta cada 5 s (solo con la pestaña visible) y refresco inmediato tras cada cambio propio | `core/live-refresh.service.ts` |
 
 ## Pantallas
 
@@ -25,8 +26,8 @@ Frontend Angular 20 de **Pedidos360** con autenticación **Microsoft Entra ID** 
 | `/dashboard` | DashboardComponent | todos |
 | `/orders`, `/orders/:id` | OrdersComponent, OrderListComponent, OrderDetailComponent, OrderStatusBadgeComponent | Admin, Operador, Cliente |
 | `/catalog` | CatalogComponent, ProductCardComponent, ProductFormComponent | Admin, Operador |
-| `/reports` | ReportsComponent (próxima etapa) | Admin |
-| `/audit` | AuditComponent (próxima etapa) | Admin |
+| `/reports` | ReportsComponent: KPIs, ventas por hora y productos más vendidos; StockMeterComponent (semáforo de stock por producto) y SalesGoalsComponent (metas de venta con avance) (`ReportService` → BFF `/api/report/**`) | Admin |
+| `/audit` | AuditComponent: timeline de eventos con filtros por usuario, tipo, pedido y fechas (`AuditService` → BFF `/api/audit/**`) | Admin |
 | `/messaging` | MessagingComponent con pestañas Colas, Exchanges, Bindings y Mensaje de prueba (`MqAdminService` → BFF `/api/mq/**`) | Admin |
 
 ## Configuración
@@ -59,6 +60,6 @@ El workflow `.github/workflows/deploy-pages.yml` compila con `--base-href /front
 
 ## Autores
 
-Germán Maraboli & Camila Vera
+Germán Marabolí, Sebastián Velez & Camila Vera
 
 Proyecto Pedidos360 · DSY1107 Desarrollo Cloud Native I · Duoc UC
